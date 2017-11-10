@@ -7,8 +7,9 @@ std::vector<Int_t> PMdata;
 Int_t Nvalidpm;
 Int_t Nvalidmppc=0;
 
-Double_t GainAllSiPM[Nmppc];
-Double_t NoiseAllSiPM[Nmppc];
+Double_t GainAllSiPM[Npm];
+Double_t GainErrAllSiPM[Npm];
+Double_t NoiseAllSiPM[Npm];
 
 void getPMdata(Int_t run) {
   TFile *frec = new TFile(Form("$(MEG2SYS)/analyzer/recfiles/rec%06d.root", run),"READ");

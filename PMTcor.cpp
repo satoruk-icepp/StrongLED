@@ -39,6 +39,7 @@ void PMTcor(){
   histtitle=histtitle+";Gain_{new}-Gain_{old};Channels";
   TH1D* gaindiffhist = new TH1D("Gain_{new}-Gain_{old}",histtitle,200,-2.5*pow(10,7),2.5*pow(10,7));
   TF1* fitgaus = new TF1("f1","[0]*TMath::Gaus(x,[1],[2])");
+  TF1* corfit = new TF1("f2","[0]*x+[1]");
   fitgaus->SetParameters(100,0,8*pow(10,5));
   TGraphErrors* GainComp[2];
   TGraphErrors* GainCor=new TGraphErrors();
@@ -58,8 +59,9 @@ void PMTcor(){
 
         Bool_t quality=true;
         for (int run = 0; run < 2; run++) {
-          if(gainerr[run]>0.4*gain[run]){
+          if(gainerr[run]>0.2*gain[run]/*||gain[run]<0||gain[run]>pow(10,7)*/){
             quality=false;
+            std::cout<<"bad channel: "<<chNum[0]<<std::endl;
             break;
           }
         }
@@ -94,6 +96,7 @@ void PMTcor(){
   GainCor->GetXaxis()->SetLimits(0,15*pow(10,6));
   GainCor->SetMaximum(15*pow(10,6));
   GainCor->SetMinimum(0);
+  GainCor->Fit("f2");
   GainCor->Draw("ap");
   canvas2->Print(Form("Gain_correlation_PMT_run%d-%dvsrun%d-%d.png",runone[0],runone[1],runtwo[0],runtwo[1]));
   // GainComp[0]->SetMarkerColor(2);
