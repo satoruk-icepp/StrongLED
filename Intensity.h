@@ -11,7 +11,7 @@ Double_t GainAllSiPM[Nmppc];
 Double_t NoiseAllSiPM[Nmppc];
 
 void getPMdata(Int_t run) {
-  TFile *frec = new TFile(Form("$(MEG2SYS)/analyzer/rec%06d.root", run),"READ");
+  TFile *frec = new TFile(Form("$(MEG2SYS)/analyzer/recfiles/rec%06d.root", run),"READ");
   TClonesArray* pmrhArray = (TClonesArray*)frec->Get("XECPMRunHeader");
   MEGXECPMRunHeader *pmrh = 0;
   for (int iPM = 1; iPM < Npm; iPM++) {
@@ -38,7 +38,7 @@ Int_t arraysearch(std::vector<Int_t> array, Int_t value){
     }
   }
    if(found==false){
-      i=-1;  
+      i=-1;
    }
   return i;
 }
@@ -54,7 +54,7 @@ Int_t arraysearch(std::vector<Double_t> array, Double_t value){
       }
    }
    if(found==false){
-      i=-1;  
+      i=-1;
    }
    return i;
 }

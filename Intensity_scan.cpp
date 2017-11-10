@@ -12,11 +12,11 @@
 #include <math.h>
 #include <TSystem.h>
 #include <TMath.h>
-#include <Intensity.h>
+#include "Intensity.h"
 
 Int_t rangemode=0;
 //Int_t runarray[6]={305670,305671,305672,305673,305674,305675};
-//Int_t runarray[6]={306596,306597,306598,306599,306600,306601};//HV54, Config I 
+//Int_t runarray[6]={306596,306597,306598,306599,306600,306601};//HV54, Config I
 //Int_t runarray[6]={306611,306612,306613,306614,306615,306616};//HV52,Config I
 //Int_t runarray[6]={306617,306618,306619,306620,306621,306622};//HV51,Config I
 //Int_t runarray[6]={306623,306624,306625,306626,306627,306628};//HV50,Config I
@@ -25,11 +25,13 @@ Int_t rangemode=0;
 //Int_t runarray[5]={306664,306665,306666,306667,306668};
 //Int_t runarray[5]={306679,306680,306681,306682,306683};
 //Int_t runarray[5]={306688,306689,306690,306691,306692};
-Int_t runarray[6]={306902,306903,306905,306906,306907,306908};//OV7V,Config A
+//Int_t runarray[6]={306902,306903,306905,306906,306907,306908};//OV7V,Config A
 //Int_t runarray[6]={306909,306910,306911,306912,306913,306914};//OV5V,Config A
 //Int_t runarray[6]={306922,306923,306924,306926,306927,306928};//OV1V,Config A
 //Int_t runarray[5]={306674,306675,306676,306677,306678};//HV Ultrastrong
 //Int_t runarray[5]={306701,306702,306703,306704,306705};
+//Int_t runarray[5]={308540,308542,308543,308545,308547};//PMT 9,Nov
+Int_t runarray[7]={306998,306999,307000,307001,307002,307003,307004};//PMT 9,Nov
 //Int_t runarray[3]={306703,306704,306705};
 //Int_t runarray[6]={306902,306903,306905,306906,306907,306908};
 
@@ -82,7 +84,7 @@ void Intensity_scan() {
    }
    for(int run = 0; run < runnum; run++) {
       //file read
-      TFile *frec = new TFile(Form("$(MEG2SYS)/analyzer/rec%06d.root", runarray[run]),"READ");
+      TFile *frec = new TFile(Form("$(MEG2SYS)/analyzer/recfiles/rec%06d.root", runarray[run]),"READ");
       TTree *rec = (TTree*)frec->Get("rec");
       TBranch* br2 = rec->GetBranch("xecwfcl");
       TClonesArray* XECWaveformAnalysisResult = new TClonesArray("MEGXECWaveformAnalysisResult");
@@ -101,7 +103,7 @@ void Intensity_scan() {
             rangemin=rangemax4PMT-range4PMT;
             rangemax=rangemax4PMT;
          }
-         new((*chargeHarr)[i]) TH1D(Form("charge histogram %d;charge[10^{9}e];events",ch),Form("charge histogram title %d",ch),100,rangemin,rangemax);
+         new((*chargeHarr)[i]) TH1D(Form("charge histogram %d;charge[10^{9}e];events",ch),Form("charge histogram title %d",ch),200,rangemin,rangemax);
          new((*fitFarr)[i]) TF1(Form("gausvar%d",ch),vargaus,-10,0.5,3);
       }
 
@@ -191,6 +193,7 @@ void Intensity_scan(int ch) {
   getPMdata(runarray[0]);
   if(arraysearch(PMdata,ch)==-1){
      std::cerr<<"Channel not found"<<std::endl;
+     std::exit(EXIT_FAILURE);
   }
   TGraphErrors *gr =new TGraphErrors(runnum);
 
@@ -214,8 +217,8 @@ void Intensity_scan(int ch) {
       rangemin=rangemax4PMT-range4PMT;
       rangemax=rangemax4PMT;
     }
-    new((*chargeHarr)[run]) TH1D(Form("charge histogram %d",ch),Form("charge histogram title %d;Charge[10^{9}e];Events",ch),100,rangemin,rangemax);
-    TFile *frec = new TFile(Form("$(MEG2SYS)/analyzer/rec%06d.root", runarray[run]),"READ");
+    new((*chargeHarr)[run]) TH1D(Form("charge histogram %d",ch),Form("charge histogram title %d;Charge[10^{9}e];Events",ch),200,rangemin,rangemax);
+    TFile *frec = new TFile(Form("$(MEG2SYS)/analyzer/recfiles/rec%06d.root", runarray[run]),"READ");
 
     TTree *rec = (TTree*)frec->Get("rec");
     TBranch* br2 = rec->GetBranch("xecwfcl");
