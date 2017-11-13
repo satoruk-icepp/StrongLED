@@ -16,33 +16,10 @@
 #include "Intensity.h"
 
 Int_t rangemode=0;
-//Int_t runarray[6]={305670,305671,305672,305673,305674,305675};
-//Int_t runarray[6]={306596,306597,306598,306599,306600,306601};//HV54, Config I
-//Int_t runarray[6]={306611,306612,306613,306614,306615,306616};//HV52,Config I
-//Int_t runarray[6]={306617,306618,306619,306620,306621,306622};//HV51,Config I
-//Int_t runarray[6]={306623,306624,306625,306626,306627,306628};//HV50,Config I
-//Int_t runarray[6]={306629,306630,306631,306632,306633,306634};//HV49,Config I
-//Int_t runarray[5]={306636,306637,306638,306639,306640};//HV48,Config I
-//Int_t runarray[5]={306664,306665,306666,306667,306668};
-//Int_t runarray[5]={306679,306680,306681,306682,306683};
-//Int_t runarray[5]={306688,306689,306690,306691,306692};
-//Int_t runarray[6]={306902,306903,306905,306906,306907,306908};//OV7V,Config A
-//Int_t runarray[6]={306909,306910,306911,306912,306913,306914};//OV5V,Config A
-//Int_t runarray[6]={306922,306923,306924,306926,306927,306928};//OV1V,Config A
-//Int_t runarray[5]={306674,306675,306676,306677,306678};//HV Ultrastrong
-//Int_t runarray[5]={306701,306702,306703,306704,306705};
- Int_t runarray[8]={308540,308541,308542,308543,308544,308545,308546,308547};//PMT 9,Nov
-//Int_t runarray[8]={308583,308584,308585,308586,308587,308588,308589,308590};//PMT 9,Nov
-//Int_t runarray[7]={306998,306999,307000,307001,307002,307003,307004};//PMT 1,Sep
-//Int_t runarray[3]={306703,306704,306705};
-//Int_t runarray[6]={306902,306903,306905,306906,306907,306908};
+Int_t runarray[8]={308583,308584,308585,308586,308587,308588,308589,308590};//PMT 9,Nov
 
 Int_t runnum=(sizeof(runarray)/sizeof(runarray[0]));
 
-//Double_t varrange[2]={0,0.0001};//HV 47V
-
-//Double_t posoff=1.0;
-//Double_t chargerange[2]={-6.0+posoff,posoff};
 Double_t rangemax4SiPM=2.0;
 Double_t range4SiPM=16.0;
 Double_t rangemax4PMT=0.5;
@@ -51,7 +28,7 @@ Double_t rangemin;
 Double_t rangemax;
 Double_t GainMax=5.0*pow(10,8);
 
-void Intensity_scan() {
+void strongLED_online() {
   //TString outputpath="";
   TString outputfilename;
   outputfilename.Form("gain_%d-%d_%d.csv",runarray[0],runarray[runnum-1],rangemode);
@@ -151,7 +128,8 @@ void Intensity_scan() {
     Gain[i]=((TF1*)((*linFarr)[i]))->GetParameter(0)*pow(10,9);
     GainErr[i]=((TF1*)((*linFarr)[i]))->GetParError(0)*pow(10,9);
     NoiseVariance[i]=((TF1*)((*linFarr)[i]))->GetParameter(1);
-
+    chgain->SetPoint(i,chNum,Gain[i]);
+    chgain->SetPointError(i,0,GainErr[i]);
     gainhist->Fill(Gain[i]);
     onegain=Gain[i];
     onegainerr=GainErr[i];
@@ -163,9 +141,6 @@ void Intensity_scan() {
       GainAllSiPM[chNum]=onegain;
       GainErrAllSiPM[chNum]=onegainerr;
       NoiseAllSiPM[chNum]=onenoise;
-      Int_t index=chgain->GetN();
-      chgain->SetPoint(index,chNum,Gain[i]);
-      chgain->SetPointError(index,0,GainErr[i]);
     }/*else if(Gain[i]>5*pow(10,7)){
       std::cout<<"high gain:    "<<i<<"     ch    "<<ch<<std::endl;
     }*/
@@ -179,32 +154,27 @@ void Intensity_scan() {
   fout->Close();
   //canvas1->cd();
   //gainhist->Draw();
-  Int_t dbid=11;
+  Int_t dbid=10;
   Int_t dbHVdemanded=0;
   Int_t dbHVMeasured=0;
   Int_t dbHVCurrent=0;
   Int_t dbm1st=0;
   Int_t dbm1stUnc=0;
   for(int i=0;i<Npm;i++){
-    if(i>Nmppc-1){
-      output<<dbid<<','<<i<<','<<GainAllSiPM[i]<<','<<GainErrAllSiPM[i]<<','<<dbHVdemanded<<','<<dbHVMeasured<<','<<dbHVCurrent<<','<<dbm1st<<','<<dbm1stUnc<<std::endl;
-    }else{
-      output<<dbid<<','<<i<<','<<0<<','<<0<<','<<dbHVdemanded<<','<<dbHVMeasured<<','<<dbHVCurrent<<','<<dbm1st<<','<<dbm1stUnc<<std::endl;
-    }
-
+    output<<dbid<<','<<i<<','<<GainAllSiPM[i]<<','<<GainErrAllSiPM[i]<<','<<dbHVdemanded<<','<<dbHVMeasured<<','<<dbHVCurrent<<','<<dbm1st<<','<<dbm1stUnc<<std::endl;
   }
   //canvas3->cd();
   //InnerGeometry(GainAllSiPM,GainMax);
   //canvas4->cd();
   //InnerGeometry(NoiseAllSiPM,1);
-  canvas1->cd();
-  chgain->SetMarkerStyle(22);
-  chgain->SetMarkerColor(2);
-  chgain->SetMarkerSize(1);
-  chgain->SetMaximum(GainMax);
-  chgain->SetMinimum(0);
-  chgain->SetTitle("Gain of each channel;channel;Gain");
-  chgain->Draw("ap");
+  // canvas1->cd();
+  // chgain->SetMarkerStyle(22);
+  // chgain->SetMarkerColor(2);
+  // chgain->SetMarkerSize(1);
+  // chgain->SetMaximum(GainMax);
+  // chgain->SetMinimum(0);
+  // chgain->SetTitle("Gain of each channel;channel;Gain");
+  // chgain->Draw("ap");
   // canvas1->Print(Form("run%d-%d_chgain.pdf",runarray[0],runarray[runnum-1]));
 
   //gain histogram
@@ -217,7 +187,7 @@ void Intensity_scan() {
 }
 
 
-void Intensity_scan(int ch) {
+void strongLED_online(int ch) {
   getPMdata(runarray[0]);
   if(arraysearch(PMdata,ch)==-1){
     std::cerr<<"Channel not found"<<std::endl;

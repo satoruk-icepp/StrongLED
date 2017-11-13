@@ -12,8 +12,10 @@ void PMTcor(){
   //Int_t runone[2]={306909,306914};
   //Int_t runtwo[2]={306922,306928};
   //Int_t runtwo[2]={306701,306705};
-  Int_t runone[2]={306998,307004};
-  Int_t runtwo[2]={308540,308547};
+  //Int_t runone[2]={306998,307004};
+  //Int_t runtwo[2]={308540,308547};
+  Int_t runone[2]={308540,308547};
+  Int_t runtwo[2]={308583,308590};
 
   Int_t rangemode=0;
   TFile* fin[2];
@@ -59,7 +61,7 @@ void PMTcor(){
 
         Bool_t quality=true;
         for (int run = 0; run < 2; run++) {
-          if(gainerr[run]>0.2*gain[run]/*||gain[run]<0||gain[run]>pow(10,7)*/){
+          if(gainerr[run]>0.2*gain[run]||gain[run]<0||gain[run]>pow(10,7)){
             quality=false;
             std::cout<<"bad channel: "<<chNum[0]<<std::endl;
             break;
@@ -92,7 +94,7 @@ void PMTcor(){
   gaindiffhist->Draw();
 
   canvas2->cd();
-  GainCor->SetTitle("Gain Correlation;Gain_{old};Gain_{latest}");
+  GainCor->SetTitle("Gain Correlation;Gain_{latest};Gain_{MEG I}");
   GainCor->GetXaxis()->SetLimits(0,15*pow(10,6));
   GainCor->SetMaximum(15*pow(10,6));
   GainCor->SetMinimum(0);
