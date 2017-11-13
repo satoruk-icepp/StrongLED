@@ -1,18 +1,11 @@
-#include <string>
-#include <iostream>
-#include <fstream>
-#include <sstream>  // Required for stringstream
-#include <TCanvas.h>
-#include <TFile.h>
-#include <TTree.h>
-#include <TClonesArray.h>
-#include <TBranch.h>
-#include <TH1.h>
-#include <TF1.h>
-#include <TGraph.h>
-#include <math.h>
-#include <TSystem.h>
-#include <TMath.h>
+#include "TFile.h"
+#include "TTree.h"
+#include "TBranch.h"
+#include "TClonesArray.h"
+#include "Riostream.h"
+#ifndef __CINT__
+#include "ROMETreeInfo.h"
+#endif
 #include "Intensity.h"
 
 Int_t rangemode=0;
@@ -31,7 +24,8 @@ Int_t rangemode=0;
 //Int_t runarray[6]={306922,306923,306924,306926,306927,306928};//OV1V,Config A
 //Int_t runarray[5]={306674,306675,306676,306677,306678};//HV Ultrastrong
 //Int_t runarray[5]={306701,306702,306703,306704,306705};
- Int_t runarray[8]={308540,308541,308542,308543,308544,308545,308546,308547};//PMT 9,Nov
+ //Int_t runarray[8]={308540,308541,308542,308543,308544,308545,308546,308547};//PMT 9,Nov
+ Int_t runarray[]={308525,308526,308527,308528,308529,308530,308531,308532};//PMT 9,Nov
 //Int_t runarray[8]={308583,308584,308585,308586,308587,308588,308589,308590};//PMT 9,Nov
 //Int_t runarray[7]={306998,306999,307000,307001,307002,307003,307004};//PMT 1,Sep
 //Int_t runarray[3]={306703,306704,306705};
