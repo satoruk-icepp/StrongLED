@@ -7,15 +7,16 @@ TString makefoutname(int runini, int runend,int rangemode){
 void PMTcor(){
   TCanvas* canvas1 =new TCanvas("canvas1","Gain Difference",600,600);
   TCanvas* canvas2 =new TCanvas("canvas2","Gain Comparison",600,600);
+  TCanvas* canvas3 =new TCanvas("canvas3","Gain Decrease",600,600);
 
   //Int_t runone[2]={306902,306908};
   //Int_t runone[2]={306909,306914};
   //Int_t runtwo[2]={306922,306928};
   //Int_t runtwo[2]={306701,306705};
-  //Int_t runone[2]={306998,307004};
-  //Int_t runtwo[2]={308540,308547};
-  Int_t runone[2]={308540,308547};
-  Int_t runtwo[2]={308583,308590};
+  Int_t runone[2]={306998,307004};
+  Int_t runtwo[2]={308540,308547};
+  //Int_t runone[2]={308540,308547};
+  //Int_t runtwo[2]={308583,308590};//MEG I HV
 
   Int_t rangemode=0;
   TFile* fin[2];
@@ -45,6 +46,7 @@ void PMTcor(){
   fitgaus->SetParameters(100,0,8*pow(10,5));
   TGraphErrors* GainComp[2];
   TGraphErrors* GainCor=new TGraphErrors();
+  TGraphErrors* GainDecrease=new TGraphErrors();
 
   for(int i=0;i<2;i++){
     GainComp[i]  = new TGraphErrors();
@@ -78,6 +80,8 @@ void PMTcor(){
           idg++;
           Double_t GainDiff=gain[1]-gain[0];
           gaindiffhist->Fill(GainDiff);
+          GainDecrease->SetPoint(id_cor,gain[0],GainDiff);
+          GainDecrease->SetPointError(id_cor,gainerr[0],TMath::Sqrt(gainerr[0]*gainerr[0]+gainerr[1]*gainerr[1]));
         }
       }
       ich[0]++;
@@ -94,7 +98,8 @@ void PMTcor(){
   gaindiffhist->Draw();
 
   canvas2->cd();
-  GainCor->SetTitle("Gain Correlation;Gain_{latest};Gain_{MEG I}");
+  //GainCor->SetTitle("Gain Correlation;Gain_{latest};Gain_{MEG I}");
+  GainCor->SetTitle("Gain Correlation;Gain_{old};Gain_{new}");
   GainCor->GetXaxis()->SetLimits(0,15*pow(10,6));
   GainCor->SetMaximum(15*pow(10,6));
   GainCor->SetMinimum(0);
@@ -104,5 +109,10 @@ void PMTcor(){
   // GainComp[0]->SetMarkerColor(2);
   // GainComp[0]->Draw("ap");
   // GainComp[1]->Draw("p");
+  canvas3->cd();
+  GainDecrease->SetMarkerStyle(20);
+  GainDecrease->SetMarkerColor(kRed);
+  GainDecrease->SetTitle("Gain Decrease;Gain_{old};Gain_{new}-Gain_{old}");
+  GainDecrease->Draw("ap");
 
 }

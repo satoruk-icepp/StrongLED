@@ -22,9 +22,9 @@ Int_t rangemode;
 std::vector<Int_t> PMdata;
 Int_t Nvalidpm;
 
-//Int_t runarray[8]={308583,308584,308585,308586,308587,308588,308589,308590};
-//Int_t runarray[]={308540,308541,308542,308543,308544,308545,308546,308547};
-Int_t runarray[]={308525,308526,308527,308528,308529,308530,308531,308532};
+//Int_t runarray[]={308583,308584,308585,308586,308587,308588,308589,308590};
+Int_t runarray[]={308540,308541,308542,308543,308544,308545,308546,308547};
+//Int_t runarray[]={308525,308526,308527,308528,308529,308530,308531,308532};
 Int_t runnum=(sizeof(runarray)/sizeof(runarray[0]));
 
 void Draw(Int_t *runarray,Bool_t PMTanalysis, Bool_t SiPManalysis);
@@ -35,15 +35,25 @@ Int_t arraysearch(std::vector<Int_t> array, Int_t value);
 void Analysing(Int_t *runarray);
 void ModeDeclear(Bool_t PMTanalysis,Bool_t SiPManalysis);
 
-void strongLED_online(){
+// 1. Modify runarray
+// 2. Set the range and offset of the charge distribution and change the maximum of the gain if necessary.
+// you can see the charge distribution and the fitting of one channel by DetailBool==true
+
+void strongLED_online(Bool_t DetailBool=false){
   rangemode=0;
   rangemax4SiPM=2.0;
   range4SiPM=16.0;
   rangemax4PMT=0.5;
   range4PMT=5.0;
-  GainMax=5.0*pow(10,8);
-  Draw(runarray,true,false);
-  //Detail(runarray,4141);
+  GainMax=2.0*pow(10,7);
+  if (DetailBool==true) {
+    int visch=4600;
+    std::cout<<"Channel to visualize:"<<std::endl;
+    std::cin>>visch;
+    Detail(runarray,visch);
+  }else{
+    Draw(runarray,true,false);
+  }
 }
 
 void Draw(Int_t *runarray,Bool_t PMTanalysis,Bool_t SiPManalysis) {
@@ -51,7 +61,7 @@ void Draw(Int_t *runarray,Bool_t PMTanalysis,Bool_t SiPManalysis) {
   ModeDeclear(PMTanalysis,SiPManalysis);
   getPMdata(runarray[0],PMTanalysis,SiPManalysis);
   TCanvas *canvas1 = new TCanvas("canvas1","Gain",600,600);
-  TGraphErrors *chgain = new TGraphErrors(Nvalidpm);
+  TGraphErrors *chgain = new TGraphErrors();
   TClonesArray *linearGarr =new TClonesArray("TGraphErrors",Nvalidpm);
   TClonesArray *linFarr = new TClonesArray("TF1",Nvalidpm);
   for(int i=0;i<Nvalidpm;i++){
@@ -110,16 +120,17 @@ void Draw(Int_t *runarray,Bool_t PMTanalysis,Bool_t SiPManalysis) {
   }
 
   for(int i=0;i<Nvalidpm;i++){
-    chNum=PMdata[i];
-    ((TGraphErrors*)((*linearGarr)[i]))->Fit(Form("linear%d",chNum),"Q");
+    int ch=PMdata[i];
+    ((TGraphErrors*)((*linearGarr)[i]))->Fit(Form("linear%d",ch),"Q");
     Double_t tmpgain=((TF1*)((*linFarr)[i]))->GetParameter(0)*pow(10,9);
     Double_t tmpgainerr=((TF1*)((*linFarr)[i]))->GetParError(0)*pow(10,9);
     Double_t tmpnoisevar=((TF1*)((*linFarr)[i]))->GetParameter(1);
     if(tmpgain<=0||tmpgainerr>tmpgain){
-      std::cout<<"bad id:    "<<i<<"  ch:    "<<chNum<<"  gain error:    "<<tmpgainerr<<std::endl;
+      std::cout<<"bad id:    "<<i<<"  ch:    "<<ch<<"  gain error:    "<<tmpgainerr<<std::endl;
     }else{
-      chgain->SetPoint(i,chNum,tmpgain);
-      chgain->SetPointError(i,0,tmpgainerr);
+      Int_t index=chgain->GetN();
+      chgain->SetPoint(index,ch,tmpgain);
+      chgain->SetPointError(index,0,tmpgainerr);
     }
   }
   canvas1->cd();
@@ -142,11 +153,12 @@ void Detail(Int_t *runarray, int ch) {
   }
   std::cout<< "channel:    "<<ch<<std::endl;
   Analysing(runarray);
-  TGraphErrors *gr =new TGraphErrors(runnum);
   TClonesArray *chargeHarr = new TClonesArray("TH1D",runnum);
   TClonesArray *fitFarr = new TClonesArray("TF1",runnum);
+  TGraphErrors *gr =new TGraphErrors();
+  TF1 *linF= new TF1("linearfit","[0]*x+[1]",0,5);
   Double_t MeanMax = 0;
-  Double_t VarMax=0;
+  Double_t VarMax = 0;
   canvas1->cd();
   for(int run = 0; run < runnum; run++) {
     new((*fitFarr)[run]) TF1(Form("gausvar%d",run),vargaus,-10,0.5,3);
@@ -200,20 +212,17 @@ void Detail(Int_t *runarray, int ch) {
   gr->GetXaxis()->SetLimits(0,MeanMax*1.2);
   gr->SetMaximum(VarMax*1.2);
   gr->SetMinimum(0);
-  TF1 *linF= new TF1("linearfit","[0]*x+[1]",0,5);
+  gr->SetMarkerStyle(22);
+  gr->SetMarkerColor(2);
+  gr->SetMarkerSize(1);
   gr->Fit("linearfit","Q");
   Double_t Gain=linF->GetParameter(0);
   Double_t GainErr=linF->GetParError(0);
   Double_t NoiseVariance=linF->GetParameter(1);
   std::cout<<"Gain:    "<<Gain<<"+-"<<GainErr<<std::endl;
   std::cout<<"Noise Variance:    "<<NoiseVariance<<std::endl;
-  gr->SetMarkerStyle(22);
-  gr->SetMarkerColor(2);
-  gr->SetMarkerSize(1);
   gr->Draw("ap");
 }
-
-
 
 void getPMdata(Int_t run,Bool_t PMTanalysis, Bool_t SiPManalysis) {
   TFile *frec = new TFile(Form("$(MEG2SYS)/analyzer/recfiles/rec%06d.root", run),"READ");
@@ -249,16 +258,16 @@ Int_t arraysearch(std::vector<Int_t> array, Int_t value){
       break;
     }
   }
-   if(found==false){
-      i=-1;
-   }
+  if(found==false){
+    i=-1;
+  }
   return i;
 }
 
 void Analysing(Int_t *runarray){
   std::cout<<"Analysing: "<<std::endl;
   for (int run = 0; run < runnum; run++) {
-std::cout<<"Run "<<runarray[run]<<std::endl;
+    std::cout<<"Run "<<runarray[run]<<std::endl;
   }
 }
 

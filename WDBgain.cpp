@@ -54,8 +54,8 @@ void WDBgain() {
   TGraph* grWDBgain = new TGraph();
   TGraph* grWDBgain1st = new TGraph();
   TGraph* grWDBgain2nd = new TGraph();
-  TH1D* hGain1st= new TH1D("gain 1st","gain 1st",100,0,20);
-  TH1D* hGain2nd= new TH1D("gain 2nd","gain 2nd",100,0,20);
+  TH1D* hGain1st= new TH1D("gain 1st","gain 1st;Gain;channels",100,0,20);
+  TH1D* hGain2nd= new TH1D("gain 2nd","gain 2nd;Gain;channels",100,0,20);
   TClonesArray *linearGarr =new TClonesArray("TGraphErrors",Nvalidpm);
   TClonesArray *linFarr = new TClonesArray("TF1",Nvalidpm);
   for(int i=0;i<Nvalidpm;i++){
@@ -79,19 +79,19 @@ void WDBgain() {
 
     for(int i=0;i<Nvalidpm;i++){
       int ch= PMdata[i];
-      rangemax=0.2;
+      rangemin=-0.2;
       switch (run) {
         case 0:
-        rangemin=-20.0;
+        rangemax=20.0;
         break;
         case 1:
-        rangemin=-2.0;
+        rangemax=2.0;
         break;
         case 2:
-        rangemin=-0.2;
+        rangemax=0.2;
         break;
         default:
-        rangemin=-20.0;
+        rangemax=20.0;
         break;
       }
       new((*chargeHarr)[i]) TH1D(Form("charge histogram %d;charge[10^{9}e];events",ch),Form("charge histogram title %d",ch),400,rangemin,rangemax);
@@ -111,7 +111,7 @@ void WDBgain() {
       for(int i=0;i<Nvalidpm;i++){
         double charge=0;
         int ch=PMdata[i];
-        charge = ((MEGXECWaveformAnalysisResult*)(XECWaveformAnalysisResult->At(ch)))->GetchargeAt(rangemode);
+        charge = -((MEGXECWaveformAnalysisResult*)(XECWaveformAnalysisResult->At(ch)))->GetchargeAt(rangemode);
         ((TH1D*)((*chargeHarr)[i]))->Fill(charge);
       }
     }
@@ -121,12 +121,14 @@ void WDBgain() {
       int ch=PMdata[i];
       Double_t defvar=((TH1D*)((*chargeHarr)[i]))->GetRMS()*((TH1D*)((*chargeHarr)[i]))->GetRMS();
       ((TF1*)(*fitFarr)[i])->SetParameters(100,defvar,((TH1D*)((*chargeHarr)[i]))->GetMean());
-      ((TH1D*)((*chargeHarr)[i]))->Fit(Form("gausvar%d",ch),"NQ","",-20,0);
+      ((TH1D*)((*chargeHarr)[i]))->Fit(Form("gausvar%d",ch),"NQ","",0,20);
       // if(i==0&&run==0){
       //   ((TH1D*)((*chargeHarr)[i]))->Draw();
       // }
       Double_t Mean=((TF1*)((*fitFarr)[i]))->GetParameter(2);
       Double_t Meanerr=((TF1*)((*fitFarr)[i]))->GetParError(2);
+      // Double_t Mean=((TH1D*)((*chargeHarr)[i]))->GetMean();
+      // Double_t Meanerr=((TH1D*)((*chargeHarr)[i]))->GetMeanError();
       ((TGraphErrors*)((*linearGarr)[i]))->SetPoint(run,WDBGainarr[run],Mean);
       ((TGraphErrors*)((*linearGarr)[i]))->SetPointError(run,0,Meanerr);
       if(run==1){
@@ -151,10 +153,12 @@ void WDBgain() {
 
   }
   canvas1->cd();
-  hGain1st->SetLineColor(kRed);
-  hGain1st->Draw();
   hGain2nd->SetLineColor(kBlue);
-  hGain2nd->Draw("same");
+  hGain2nd->Fit("gaus","N");
+  hGain2nd->Draw();
+  hGain1st->SetLineColor(kRed);
+  hGain1st->Fit("gaus","N");
+  hGain1st->Draw("same");
 
   //testH->Draw();
   canvas2->cd();
@@ -162,6 +166,7 @@ void WDBgain() {
   grWDBgain->SetMarkerColor(kRed);
   grWDBgain->Draw("ap");
   canvas3->cd();
+  grWDBgain1st->SetTitle("Gain;channels");
   grWDBgain1st->SetMarkerStyle(20);
   grWDBgain1st->SetMarkerColor(kRed);
   grWDBgain1st->SetMaximum(20);
@@ -194,19 +199,19 @@ void WDBgain(int ch) {
     TClonesArray* XECWaveformAnalysisResult = new TClonesArray("MEGXECWaveformAnalysisResult");
     br2->SetAddress(&XECWaveformAnalysisResult);
 
-    rangemax=0.2;
+    rangemin=-0.2;
     switch (run) {
       case 0:
-      rangemin=-20.0;
+      rangemax=20.0;
       break;
       case 1:
-      rangemin=-2.0;
+      rangemax=2.0;
       break;
       case 2:
-      rangemin=-0.2;
+      rangemax=0.2;
       break;
       default:
-      rangemin=-20.0;
+      rangemax=20.0;
       break;
     }
     new((*chargeHarr)[run]) TH1D(Form("charge histogram %d;charge[10^{9}e];events",ch),Form("charge histogram title %d",ch),400,rangemin,rangemax);
@@ -218,7 +223,7 @@ void WDBgain(int ch) {
       br2->GetEntry(eve);
 
 
-      Double_t charge = ((MEGXECWaveformAnalysisResult*)(XECWaveformAnalysisResult->At(ch)))->GetchargeAt(rangemode);
+      Double_t charge = -((MEGXECWaveformAnalysisResult*)(XECWaveformAnalysisResult->At(ch)))->GetchargeAt(rangemode);
       ((TH1D*)((*chargeHarr)[run]))->Fill(charge);
 
     }
@@ -231,7 +236,9 @@ void WDBgain(int ch) {
     gr->SetPointError(run,0,Meanerr);
   }
   canvas1->cd();
-  Int_t VisCh=2;
+  canvas1->SetLogy();
+  canvas1->SetLogx();
+  gr->SetTitle("Charge;WDB Gain;|Q|[10^{9}e]");
   gr->SetMarkerColor(kRed);
   gr->SetMarkerStyle(20);
   gr->Draw("ap");
@@ -239,8 +246,11 @@ void WDBgain(int ch) {
 
   //testH->Draw();
   canvas2->cd();
+
   for (int i = 0; i < runnum; i++) {
+    ((TH1D*)((*chargeHarr)[i]))->SetLineColor(i+2);
     if(i==0){
+      ((TH1D*)((*chargeHarr)[i]))->SetTitle("charge histogram;|Q|[10^{9}e];events");
       ((TH1D*)((*chargeHarr)[i]))->Draw();
     }else{
       ((TH1D*)((*chargeHarr)[i]))->Draw("same");
